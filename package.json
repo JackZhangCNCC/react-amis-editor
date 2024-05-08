@@ -28,8 +28,8 @@
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.15.3",
     "amis": "6.4.0",
-    "amis-core": "6.4.0",
-    "amis-editor": "6.4.0",
+    "amis-core": "*",
+    "amis-editor": "*",
     "amis-editor-core": "6.4.0",
     "amis-formula": "6.4.0",
     "amis-ui": "6.4.0",

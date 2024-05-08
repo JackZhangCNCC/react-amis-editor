@@ -65,7 +65,7 @@ class Store {
   @observable schema = {}
 
   @action updateSchema(value) {
-    this.schema = value;
+    this.schema.values = value;
   }
 
   @action setPreview(value) {
@@ -97,11 +97,18 @@ class App extends React.Component {
     
     function save() {
       toast.success("保存成功", "提示");
+      // console.log("🚀 ~ 子应用 ~:", "保存成功")
+      // 清空当前子应用发送给主应用的数据
+      window.microApp.clearData()
+      window.microApp.dispatch({type: '保存', data: store})
     }
 
     function onChange(value) {
-      // store.updateSchema(value);
+      store.updateSchema(value);
       // store.schema = value;
+
+      // dispatch只接受对象作为参数
+      // window.microApp.dispatch({type: '子应用发送给主应用的数据'})
     }
 
     function changeLocale(value) {
@@ -111,7 +118,15 @@ class App extends React.Component {
 
     function exit() {
       // history.push(`/${store.pages[index].path}`);
-      toast.success("退出了", "提示");
+      // toast.success("退出了", "提示");
+      // 清空当前子应用发送给主应用的数据
+      window.microApp.clearData()
+      window.microApp.dispatch({type: '退出'})
+    }
+    function toOld() {
+      // 清空当前子应用发送给主应用的数据
+      window.microApp.clearData()
+      window.microApp.dispatch({type: '旧版'})
     }
 
     return (
@@ -119,7 +134,13 @@ class App extends React.Component {
         <div className="Editor-header">
           <div className="Editor-title">amis 可视化编辑器</div>
           <div className="Editor-header-actions">
+            <div className={`header-action-btn old-btn`} onClick={toOld}>
+              旧版
+            </div>
             <ShortcutKey />
+            <div className={`header-action-btn save-btn`} onClick={save}>
+              保存
+            </div>
             <div
               className={`header-action-btn m-1 ${
                 store.preview ? "primary" : ""
@@ -130,11 +151,11 @@ class App extends React.Component {
             >
               {store.preview ? "编辑" : "预览"}
             </div>
-            {/* {!store.preview && (
+            {!store.preview && (
               <div className={`header-action-btn exit-btn`} onClick={exit}>
                 退出
               </div>
-            )} */}
+            )}
           </div>
         </div>
         <div className="Editor-inner">
