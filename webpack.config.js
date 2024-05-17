@@ -29,6 +29,7 @@ let config = {
   plugins: [new MonacoWebpackPlugin()],
   devServer: {
     compress: true, // 启动Gzip
+    host: '192.168.99.199',
     port: 3030, // 端口
     open: true,
     headers: {

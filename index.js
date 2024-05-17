@@ -4,10 +4,7 @@ import ReactDOM from "react-dom";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import { Editor, ShortcutKey } from "amis-editor";
-import { RouteComponentProps } from "react-router-dom";
 import { toast, Select, Icon, registerIcon } from "amis";
-import { currentLocale } from "i18n-runtime";
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import "@fortawesome/fontawesome-free/css/all.css";
 import "@fortawesome/fontawesome-free/css/v4-shims.css";
 import "amis/lib/themes/default.css";
@@ -18,28 +15,6 @@ import "amis-editor-core/lib/style.css";
 import "./scss/style.scss";
 
 class Store {
-  // @observable pages = [
-  //   {
-  //     id: "1",
-  //     icon: "fa fa-file",
-  //     path: "hello-world",
-  //     label: "Hello world",
-  //     schema: {
-  //       type: "page",
-  //       title: "Hello world",
-  //       body: [
-  //         {
-  //           type: "chained-select",
-  //           label: "链式下拉",
-  //           name: "chainedSelect",
-  //           joinValues: true,
-  //           id: "u:815adee0d471",
-  //         },
-  //       ],
-  //       id: "u:517829721b18",
-  //     },
-  //   },
-  // ];
   @observable pages = [];
   @observable theme = "cxd";
   @observable asideFixed = true;
@@ -48,28 +23,22 @@ class Store {
   @observable addPageIsOpen = false;
   @observable preview = false;
   @observable isMobile = false;
-  // @observable schema = {
-  //   type: "page",
-  //   title: "Hello world",
-  //   body: [
-  //     {
-  //       type: "chained-select",
-  //       label: "链式下拉",
-  //       name: "chainedSelect",
-  //       joinValues: true,
-  //       id: "u:815adee0d471",
-  //     },
-  //   ],
-  //   id: "u:517829721b18",
-  // };
   @observable schema = {}
 
   @action updateSchema(value) {
-    this.schema.values = value;
+    setTimeout(() => {
+      console.log('👻 ~ 触发change，修改schema', value)
+      this.schema.values = value;
+    }, 100);
   }
 
   @action setPreview(value) {
-    this.preview = value;
+    if(value == true) {
+      localStorage.setItem('editting_schema', JSON.stringify(this.schema));
+    }
+    setTimeout(() => {
+      this.preview = value;
+    }, 100);
   }
 
   @action fetcher = (api, data) => {
@@ -89,54 +58,65 @@ class Store {
   }
 }
 const store = new Store();
+
 @observer
 class App extends React.Component {
   render() {
-    let host = `${window.location.protocol}//${window.location.host}`;
-    const schemaUrl = `${host}/schema.json`;
-    
     function save() {
-      toast.success("保存成功", "提示");
-      // console.log("🚀 ~ 子应用 ~:", "保存成功")
-      // 清空当前子应用发送给主应用的数据
-      window.microApp.clearData()
-      window.microApp.dispatch({type: '保存', data: store})
+      setTimeout(()=>{
+        let data = {...store.schema.values, type: 'page'}
+        console.log("👻 ~ App ~ 保存 ~ store.schema:", data)
+        localStorage.setItem('editting_schema', JSON.stringify(data));
+        window.microApp.forceDispatch({type: '保存'}, () => {
+          console.log('👻 ~ 保存请求的数据已经发送完成')
+        })
+      }, 10)
     }
 
     function onChange(value) {
       store.updateSchema(value);
-      // store.schema = value;
-
-      // dispatch只接受对象作为参数
-      // window.microApp.dispatch({type: '子应用发送给主应用的数据'})
     }
-
-    function changeLocale(value) {
-      localStorage.setItem("suda-i18n-locale", value);
-      window.location.reload();
+    function onInit() {
+      //TODO 这段这么写是为了解决基座项目点修改进入编辑器有时候不渲染已有数据的情况 暂未找到更好解决方案
+      store.setPreview(true);
+      store.setPreview(false);
     }
 
     function exit() {
-      // history.push(`/${store.pages[index].path}`);
-      // toast.success("退出了", "提示");
+      setTimeout(()=>{
+        window.microApp && window.microApp.forceDispatch({type: '退出'}, () => {
+          clear()
+          console.log('👻 ~ 退出请求的数据已经发送完成')
+        })
+      }, 10)
+    }
+    function clear() {
       // 清空当前子应用发送给主应用的数据
       window.microApp.clearData()
-      window.microApp.dispatch({type: '退出'})
     }
-    function toOld() {
-      // 清空当前子应用发送给主应用的数据
-      window.microApp.clearData()
-      window.microApp.dispatch({type: '旧版'})
+
+    function beforeReplace(e, f) {
+      console.log("👻 ~ App ~ beforeReplace ~ e:", e)
+      console.log("👻 ~ App ~ beforeReplace ~ f:", f)
     }
+    // 监听函数
+    function dataListener (data) {
+      console.log('👻 ~ 来自主应用的数据', data)
+    }
+
+    window.microApp && window.microApp.addDataListener(dataListener)
 
     return (
       <div className="Editor-Demo">
         <div className="Editor-header">
-          <div className="Editor-title">amis 可视化编辑器</div>
+          <div className="Editor-title">表单编辑器</div>
           <div className="Editor-header-actions">
+            {/* <div className={`header-action-btn old-btn`} onClick={test}>
+              Test
+            </div>
             <div className={`header-action-btn old-btn`} onClick={toOld}>
               旧版
-            </div>
+            </div> */}
             <ShortcutKey />
             <div className={`header-action-btn save-btn`} onClick={save}>
               保存
@@ -160,17 +140,19 @@ class App extends React.Component {
         </div>
         <div className="Editor-inner">
           <Editor
+            ref={"aminos"}
             theme={"cxd"}
             preview={store.preview}
             isMobile={store.isMobile}
-            value={store.schema}
+            value={(localStorage.getItem('editting_schema')&&localStorage.getItem('editting_schema')!=='{}'&&JSON.parse(localStorage.getItem('editting_schema')).id) ? JSON.parse(localStorage.getItem('editting_schema')) : store.schema.values}
             onChange={onChange}
+            onInit={onInit}
             onPreview={() => {
               store.setPreview(true);
             }}
             onSave={save}
+            beforeReplace={beforeReplace}
             className="is-fixed"
-            $schemaUrl={schemaUrl}
             showCustomRenderersPanel={true}
             amisEnv={{
               fetcher: store.fetcher,
@@ -186,6 +168,6 @@ class App extends React.Component {
 }
 
 window.unmount = () => {
-  ReactDOM.unmountComponentAtNode(document.getElementById('root'))
+  ReactDOM.unmountComponentAtNode(document.getElementById('amisRoot'))
 }
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(<App />, document.getElementById("amisRoot"));
