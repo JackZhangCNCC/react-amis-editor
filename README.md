@@ -21,3 +21,4 @@ https://github.com/aisuda/amis-editor-demo
 访问路径为 http://ip:port/amis-editor/index.html
 
 ##
+2.0修改参考自hyz792901324的github项目
