@@ -1,15 +1,15 @@
-import React, {useState} from 'react';
-import {Editor, setSchemaTpl, ShortcutKey} from 'amis-editor';
-import {inject, observer} from 'mobx-react';
-import {RouteComponentProps} from 'react-router-dom';
-import {toast, Select} from 'amis';
-import {currentLocale} from 'i18n-runtime';
-import {Icon} from '../icons/index';
+import React, { useState } from 'react';
+import { Editor, setSchemaTpl, ShortcutKey } from 'amis-editor';
+import { inject, observer } from 'mobx-react';
+import { RouteComponentProps } from 'react-router-dom';
+import { toast, Select } from 'amis';
+import { currentLocale } from 'i18n-runtime';
+import { Icon } from '../icons/index';
 import '../editor/DisabledEditorPlugin'; // 用于隐藏一些不需要的Editor预置组件
 import '../renderer/MyRenderer';
 import '../editor/MyRenderer';
-import {types} from "mobx-state-tree";
-import {InputJSONSchemaObject} from "amis-ui/lib/components/json-schema/Object";
+import { types } from "mobx-state-tree";
+import { InputJSONSchemaObject } from "amis-ui/lib/components/json-schema/Object";
 
 let currentIndex = -1;
 
@@ -36,20 +36,21 @@ const schemaUrl = `${host}/schema.json`;
 export default inject()(
   observer(function ({
     match
-  }: {} & RouteComponentProps<{id: string}>) {
+  }: {} & RouteComponentProps<{ id: string }>) {
     const curLanguage = currentLocale(); // 获取当前语料类型
     // @ts-ignore
-    let defaultSchema:any = AMIS_JSON;
-    const [isMobile,setIsMobile] = useState(false);
-    const [preview,setPreview] = useState(false);
-    const [schema,setSchema] = useState(defaultSchema);
+    let defaultSchema: any = AMIS_JSON;
+    const [isMobile, setIsMobile] = useState(false);
+    const [preview, setPreview] = useState(false);
+    const [schema, setSchema] = useState(defaultSchema);
+    const [ifFirst, setIfFirst] = useState(true);
 
     const id = match.params.id;
     function save() {
       toast.success('保存成功', '提示');
       updateSchema(schema)
       console.log("👻 ~ App ~ 保存 ~ store.schema:", schema)
-      window.microApp && window.microApp.forceDispatch({type: '保存', data: schema}, () => {
+      window.microApp && window.microApp.forceDispatch({ type: '保存', data: schema }, () => {
         console.log('👻 ~ 保存请求的数据已经发送完成')
       })
     }
@@ -60,6 +61,7 @@ export default inject()(
     }
     function onInit() {
       //TODO 这段这么写是为了解决基座项目点修改进入编辑器有时候不渲染已有数据的情况 暂未找到更好解决方案
+      // 2024.05.20已解决
       // setPreview(true);
       // setPreview(false);
     }
@@ -69,15 +71,15 @@ export default inject()(
     //   window.location.reload();
     // }
 
-    function updateSchema(value:any){
-      console.info("更新Schema",id,value);
+    function updateSchema(value: any) {
+      console.info("更新Schema", value);
 
       // @ts-ignore
       EDITOR_SAVE(value);
     }
 
     function exit() {
-      window.microApp && window.microApp.forceDispatch({type: '退出'}, () => {
+      window.microApp && window.microApp.forceDispatch({ type: '退出' }, () => {
         clear()
         console.log('👻 ~ 退出请求的数据已经发送完成')
       })
@@ -88,11 +90,25 @@ export default inject()(
     }
 
     // 监听函数
-    function dataListener (data:any) {
+    function dataListener(data: any) {
       console.log('👻 ~ 来自主应用的数据', data)
+      if (data.type == '获取修改前表单数据') {
+        onChange(data.data)
+      }
     }
 
-    window.microApp && window.microApp.addDataListener(dataListener)
+    // 主应用修改时传来的数据
+    function dataFromVue() {
+      const data = window.microApp.getData()
+      if (data.type == '获取修改前表单数据' && ifFirst) {
+        console.log('👻 ~ 首次获取的来自主应用的数据', data)
+        setIfFirst(false)
+        onChange(data.data)
+      }
+    }
+
+    dataFromVue()
+    // window.microApp && window.microApp.addDataListener(dataListener)
 
     return (
       <div className="Editor-Demo">
@@ -133,9 +149,8 @@ export default inject()(
             {/*  onChange={(e: any) => changeLocale(e.value)}*/}
             {/*/>*/}
             <div
-              className={`header-action-btn m-1 ${
-                preview ? 'primary' : ''
-              }`}
+              className={`header-action-btn m-1 ${preview ? 'primary' : ''
+                }`}
               onClick={() => {
                 setPreview(!preview);
               }}
@@ -161,8 +176,12 @@ export default inject()(
             preview={preview}
             isMobile={isMobile}
             value={schema}
-            onChange={onChange}
-            onInit={onInit}
+            onChange={() => {
+              onChange;
+            }}
+            onInit={() => {
+              onInit;
+            }}
             onPreview={() => {
               setPreview(true);
             }}
