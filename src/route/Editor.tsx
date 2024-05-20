@@ -176,12 +176,8 @@ export default inject()(
             preview={preview}
             isMobile={isMobile}
             value={schema}
-            onChange={() => {
-              onChange;
-            }}
-            onInit={() => {
-              onInit;
-            }}
+            onChange={onChange}
+            onInit={onInit}
             onPreview={() => {
               setPreview(true);
             }}
