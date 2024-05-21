@@ -90,20 +90,24 @@ export default inject()(
     }
 
     // 监听函数
-    function dataListener(data: any) {
-      console.log('👻 ~ 来自主应用的数据', data)
-      if (data.type == '获取修改前表单数据') {
-        onChange(data.data)
-      }
-    }
+    // function dataListener(data: any) {
+    //   console.log('👻 ~ 来自主应用的数据', data)
+    //   if (data.type == '获取修改前表单数据') {
+    //     onChange(data.data)
+    //   }
+    // }
 
     // 主应用修改时传来的数据
     function dataFromVue() {
+      console.log('👻 ~ dataFromVue中')
+      if(!window.microApp) return
       const data = window.microApp.getData()
-      if (data.type == '获取修改前表单数据' && ifFirst) {
-        console.log('👻 ~ 首次获取的来自主应用的数据', data)
-        setIfFirst(false)
-        onChange(data.data)
+      if (data) {
+        if (data.type == '获取修改前表单数据' && ifFirst) {
+          console.log('👻 ~ 首次获取的来自主应用的数据', data)
+          setIfFirst(false)
+          onChange(data.data)
+        }
       }
     }
 
