@@ -25,8 +25,8 @@ module.exports = {
     externals: [],
     projectDir: ['src'],
     template: resolve('./src/index.html'), // 使用自己的html模板
-    // cssLoaderUrl: true,
-    // cssLoaderUrlDir: 'editor/fontawesome-free',
+    cssLoaderUrl: true,
+    cssLoaderUrlDir: 'editor/fontawesome-free',
     moduleRules: [], // 用于配置自定义loaders
     plugins: [], // 用于配置自定义plugins
   },
@@ -70,7 +70,11 @@ module.exports = {
     productionSourceMap: false,
     productionGzip: false,
     productionGzipExtensions: ['js', 'css', 'json'],
-    plugins: [new MonacoWebpackPlugin()],
+    plugins: [new MonacoWebpackPlugin({
+      // 可以在这里设置插件的选项
+      languages: ['json', 'javascript', 'html', 'css'], // 设置你需要的语言
+      features: ['coreCommands', 'find'] // 设置你需要的特性
+    })],
     bundleAnalyzerReport: false,
   }
 };

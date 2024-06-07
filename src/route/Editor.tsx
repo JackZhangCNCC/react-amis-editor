@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Editor, setSchemaTpl, ShortcutKey } from 'amis-editor';
 import { inject, observer } from 'mobx-react';
 import { RouteComponentProps } from 'react-router-dom';
-import { toast, Select } from 'amis';
+import { toast, Select, confirm } from 'amis';
 import { currentLocale } from 'i18n-runtime';
 import { Icon } from '../icons/index';
 import '../editor/DisabledEditorPlugin'; // 用于隐藏一些不需要的Editor预置组件
@@ -47,12 +47,16 @@ export default inject()(
 
     const id = match.params.id;
     function save() {
-      toast.success('保存成功', '提示');
-      updateSchema(schema)
-      console.log("👻 ~ App ~ 保存 ~ store.schema:", schema)
-      window.microApp && window.microApp.forceDispatch({ type: '保存', data: schema }, () => {
-        console.log('👻 ~ 保存请求的数据已经发送完成')
-      })
+      confirm('确认要保存', '提示').then(confirmed => {
+        if(confirmed) {
+          updateSchema(schema)
+          // console.log("👻 ~ App ~ 保存 ~ store.schema:", schema)
+          window.microApp && window.microApp.forceDispatch({ type: '保存', data: schema }, () => {
+            toast.success('保存成功', '提示');
+            console.log('👻 ~ 保存请求的数据已经发送完成')
+          })
+        }
+      });
     }
 
     function onChange(value: any) {
@@ -79,10 +83,12 @@ export default inject()(
     }
 
     function exit() {
-      window.microApp && window.microApp.forceDispatch({ type: '退出' }, () => {
-        clear()
-        console.log('👻 ~ 退出请求的数据已经发送完成')
-      })
+      confirm('确认要退出', '提示').then(confirmed => {
+        confirmed && window.microApp && window.microApp.forceDispatch({ type: '退出' }, () => {
+          clear()
+          console.log('👻 ~ 退出请求的数据已经发送完成')
+        })
+      });
     }
     function clear() {
       // 清空当前子应用发送给主应用的数据
@@ -99,7 +105,7 @@ export default inject()(
 
     // 主应用修改时传来的数据
     function dataFromVue() {
-      console.log('👻 ~ dataFromVue中')
+      // console.log('👻 ~ dataFromVue中')
       if(!window.microApp) return
       const data = window.microApp.getData()
       if (data) {

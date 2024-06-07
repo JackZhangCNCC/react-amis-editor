@@ -12,13 +12,14 @@ import {
  */
 
 // 需要在组件面板中隐藏的组件
-const disabledRenderers = [
+const disabledRenderers2 = [
   'audio', // 音频
   'carousel', // 轮播图
   'custom', // 自定义代码
   'log', // 日志
   'sparkline' // 走势图
 ];
+const disabledRenderers: string | string[] = []
 
 export class ManagerEditorPlugin extends BasePlugin {
   order = 9999;
